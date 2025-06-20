@@ -43,26 +43,48 @@ menu.addEventListener("click", function (event) {
 //funcao para adicionar no carrinho
 
 function addToCart(name, price) {
-
-    const existingItem = cart.find(item => item.name == name)
+    const existingItem = cart.find(item => item.name === name);
 
     if (existingItem) {
-
         existingItem.quantity += 1;
 
+        // Exibe o toast para a adição de uma unidade
+        Toastify({
+            text: `Uma unidade de "${name}" foi adicionada ao carrinho.`,
+            duration: 3000,
+            close: true,
+            gravity: "top", // `top` or `bottom`
+            position: "right", // `left`, `center` or `right`
+            stopOnFocus: true, // Prevents dismissing of toast on hover
+            style: {
+                background: "#4CAF50", // Cor do toast
+            },
+        }).showToast();
+
+        updateCartModal();
         return;
     }
-
-
 
     cart.push({
         name,
         price,
         quantity: 1,
-    })
+    });
 
-    updateCartModal()
+    // Exibe o toast para a adição do item ao carrinho
+    Toastify({
+        text: `"${name}" foi adicionado ao carrinho.`,
+        duration: 3000,
+        close: true,
+        gravity: "top", // `top` or `bottom`
+        position: "right", // `left`, `center` or `right`
+        stopOnFocus: true, // Prevents dismissing of toast on hover
+        style: {
+            background: "#4CAF50", // Cor do toast
+        },
+    }).showToast();
 
+    updateCartModal();
 }
 
 function updateCartModal() {
@@ -122,13 +144,40 @@ function removeItemCart(name) {
         if (item.quantity > 1) {
             item.quantity -= 1;
             updateCartModal();
+
+            // Exibe o toast para a remoção de uma unidade
+            Toastify({
+                text: `Uma unidade de "${item.name}" foi removida do carrinho.`,
+                duration: 3000,
+                close: true,
+                gravity: "top", // `top` or `bottom`
+                position: "right", // `left`, `center` or `right`
+                stopOnFocus: true, // Prevents dismissing of toast on hover
+                style: {
+                    background: "#f59e0b", // Cor do toast
+                },
+            }).showToast();
+
             return;
         }
 
+        // Remove o item completamente do carrinho
         cart.splice(index, 1);
         updateCartModal();
-    }
 
+        // Exibe o toast para a remoção total do item
+        Toastify({
+            text: `"${item.name}" foi removido completamente do carrinho.`,
+            duration: 3000,
+            close: true,
+            gravity: "top", // `top` or `bottom`
+            position: "right", // `left`, `center` or `right`
+            stopOnFocus: true, // Prevents dismissing of toast on hover
+            style: {
+                background: "#ef4444", // Cor do toast
+            },
+        }).showToast();
+    }
 }
 
 addressInput.addEventListener("input", function (event) {
@@ -142,53 +191,93 @@ addressInput.addEventListener("input", function (event) {
 
 //finalizar pedido 
 checkoutBtn.addEventListener("click", function () {
-
-       const isOpen = checkRestaurantOpen();
-       if(!isOpen){
+    const isOpen = checkRestaurantOpen();
+    if (!isOpen) {
         Toastify({
-            text: "Ops o restaurante está fechado",
+            text: "Ops, o restaurante está fechado.",
             duration: 3000,
             close: true,
             gravity: "top", // `top` or `bottom`
             position: "right", // `left`, `center` or `right`
             stopOnFocus: true, // Prevents dismissing of toast on hover
             style: {
-              background: "#ef4444",
+                background: "#ef4444", // Cor do toast
             },
-            onClick: function(){} // Callback after click
-          }).showToast();
-
-          return;
+        }).showToast();
+        return;
     }
 
-    if (cart.length === 0) return;
+    if (cart.length === 0) {
+        Toastify({
+            text: "Seu carrinho está vazio.",
+            duration: 3000,
+            close: true,
+            gravity: "top",
+            position: "right",
+            stopOnFocus: true,
+            style: {
+                background: "#f59e0b", // Cor do toast
+            },
+        }).showToast();
+        return;
+    }
 
-    if (addressInput.value === "") {
+    if (addressInput.value.trim() === "") {
         addressWarn.classList.remove("hidden");
         addressInput.classList.add("border-red-500");
-        return; // adicionado para evitar continuar sem endereço
+        Toastify({
+            text: "Por favor, insira um endereço válido.",
+            duration: 3000,
+            close: true,
+            gravity: "top",
+            position: "right",
+            stopOnFocus: true,
+            style: {
+                background: "#f59e0b", // Cor do toast
+            },
+        }).showToast();
+        return;
     }
 
     // Montando os itens do carrinho com quebras de linha
     const cartItems = cart.map((item) => {
-        return `${item.name} *quantidade:* (${item.quantity}) *Preço:* R$${item.price}%0D%0A`;
+        return `${item.name} *Quantidade:* (${item.quantity}) *Preço:* R$${item.price.toFixed(2)}%0D%0A`;
     }).join("");
 
-    //const message = encodeURIComponent(cartItems);
+    // Calculando o total do pedido
+    const total = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
-    const phone = "";
-    const fullMessage = `${cartItems}%0D%0A *Endereço:* ${encodeURIComponent(addressInput.value)}`;
+    const phone = "5584996563819"; // Número de telefone para envio
+    const fullMessage = `*Pedido:*%0D%0A${cartItems}%0D%0A*Total:* R$${total.toFixed(2)}%0D%0A*Endereço:* ${encodeURIComponent(addressInput.value.trim())}`;
 
+    // Abrindo o WhatsApp com a mensagem
     window.open(`https://wa.me/${phone}?text=${fullMessage}`, "_blank");
 
-    cart.length = [];
+    // Limpando o carrinho após o envio
+    cart.length = 0;
     updateCartModal();
+
+    addressInput.value = ""; // Limpa o campo de endereço
+    cartModal.style.display = "none";
+    
+
+    Toastify({
+        text: "Pedido enviado com sucesso!",
+        duration: 3000,
+        close: true,
+        gravity: "top",
+        position: "right",
+        stopOnFocus: true,
+        style: {
+            background: "#4CAF50", // Cor do toast
+        },
+    }).showToast();
 });
 
 function checkRestaurantOpen() {
     const data = new Date;
-    const hora = data.getHours;
-    return hora >= 18 && hora < 22;
+    const hora = data.getHours();
+    return hora >= 10 && hora < 22;
 }
 
 const spanItem = document.getElementById("date-span")
