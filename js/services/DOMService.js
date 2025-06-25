@@ -86,7 +86,7 @@ class DOMService {
         const dateSpan = document.getElementById("date-span");
         const now = new Date();
         const hour = now.getHours();
-        const isOpen = hour >= 10 && hour < 22;
+        const isOpen = true;
         
         if (dateSpan) {
             if (isOpen) {
